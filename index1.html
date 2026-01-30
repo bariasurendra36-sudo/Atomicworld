@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Atomic World – All 118 Elements</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --bg:#05070a;
+  --glow:#00f2ff;
+  --panel:rgba(15,20,30,.88);
+  --text:#e0e6ed;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Segoe UI,Arial}
+
+body{
+  background:radial-gradient(circle at center,#101629,#05070a);
+  color:var(--text);
+  height:100vh;
+  overflow:hidden;
+}
+
+/* ===== LAYOUT ===== */
+.app{
+  display:grid;
+  grid-template-columns:260px 1fr 320px;
+  height:100%;
+  gap:12px;
+  padding:15px;
+}
+.panel{
+  background:var(--panel);
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(10px);
+}
+
+/* ===== LEFT LIST ===== */
+.list{overflow:auto;padding:10px}
+.item{
+  padding:8px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  font-size:.9rem;
+}
+.item:hover{background:rgba(255,255,255,.06)}
+.item.active{
+  background:linear-gradient(90deg,var(--glow),transparent);
+  color:#000;
+}
+.num{width:30px;opacity:.7}
+.sym{width:36px;font-weight:700}
+
+/* ===== CENTER ATOM ===== */
+.viewer{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  perspective:900px;
+}
+.stage{
+  position:relative;
+  width:520px;
+  height:520px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+/* nucleus */
+.nucleus{
+  position:absolute;
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  background:radial-gradient(circle,#fff,var(--glow),#000);
+  box-shadow:0 0 60px var(--glow);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:10;
+}
+.nucleus .sym{font-size:2rem;color:#fff}
+.nucleus .num{font-size:.9rem}
+
+/* orbitals */
+.orbital{
+  position:absolute;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:50%;
+  transform-style:preserve-3d;
+  animation:spin linear infinite;
+}
+@keyframes spin{
+  from{transform:rotateX(65deg) rotateZ(0deg)}
+  to{transform:rotateX(65deg) rotateZ(360deg)}
+}
+
+/* electron */
+.electron{
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 14px var(--glow);
+  transform-origin:0 0;
+}
+
+/* ===== RIGHT INFO ===== */
+.info{padding:18px}
+:root{
+  --glow:#00f2ff; /* define glow color */
+}
+
+.info h1{
+  font-size:2.2rem;
+  background:linear-gradient(180deg, #ffffff, var(--glow));
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  color:transparent;
+}.stat{margin-top:10px;font-size:.9rem;opacity:.85}
+
+/* ===== FOOTER CREDIT ===== */
+.footer{
+  position:fixed;
+  bottom:10px;
+  right:20px;
+  font-size:.8rem;
+  opacity:.5;
+}
+
+/* responsive */
+@media(max-width:1100px){
+  .app{grid-template-columns:1fr}
+  .stage{width:320px;height:320px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<!-- LEFT -->
+<div class="panel list" id="list"></div>
+
+<!-- CENTER -->
+<div class="viewer">
+  <div class="stage" id="stage">
+    <div class="nucleus" id="nucleus">
+      <div class="num" id="nNum"></div>
+      <div class="sym" id="nSym"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="panel info">
+  <h1 id="name"></h1>
+  <div class="stat" id="conf"></div>
+</div>
+
+</div>
+
+<div class="footer">Created by <strong>Surendra Baria</strong></div>
+
+<script>
+/* ===== ELEMENT DATA (1–118) ===== */
+const ELEMENTS=[
+["H","Hydrogen"],["He","Helium"],["Li","Lithium"],["Be","Beryllium"],
+["B","Boron"],["C","Carbon"],["N","Nitrogen"],["O","Oxygen"],
+["F","Fluorine"],["Ne","Neon"],["Na","Sodium"],["Mg","Magnesium"],
+["Al","Aluminium"],["Si","Silicon"],["P","Phosphorus"],["S","Sulfur"],
+["Cl","Chlorine"],["Ar","Argon"],["K","Potassium"],["Ca","Calcium"],
+["Sc","Scandium"],["Ti","Titanium"],["V","Vanadium"],["Cr","Chromium"],
+["Mn","Manganese"],["Fe","Iron"],["Co","Cobalt"],["Ni","Nickel"],
+["Cu","Copper"],["Zn","Zinc"],["Ga","Gallium"],["Ge","Germanium"],
+["As","Arsenic"],["Se","Selenium"],["Br","Bromine"],["Kr","Krypton"],
+["Rb","Rubidium"],["Sr","Strontium"],["Y","Yttrium"],["Zr","Zirconium"],
+["Nb","Niobium"],["Mo","Molybdenum"],["Tc","Technetium"],["Ru","Ruthenium"],
+["Rh","Rhodium"],["Pd","Palladium"],["Ag","Silver"],["Cd","Cadmium"],
+["In","Indium"],["Sn","Tin"],["Sb","Antimony"],["Te","Tellurium"],
+["I","Iodine"],["Xe","Xenon"],["Cs","Caesium"],["Ba","Barium"],
+["La","Lanthanum"],["Ce","Cerium"],["Pr","Praseodymium"],["Nd","Neodymium"],
+["Pm","Promethium"],["Sm","Samarium"],["Eu","Europium"],["Gd","Gadolinium"],
+["Tb","Terbium"],["Dy","Dysprosium"],["Ho","Holmium"],["Er","Erbium"],
+["Tm","Thulium"],["Yb","Ytterbium"],["Lu","Lutetium"],
+["Hf","Hafnium"],["Ta","Tantalum"],["W","Tungsten"],["Re","Rhenium"],
+["Os","Osmium"],["Ir","Iridium"],["Pt","Platinum"],["Au","Gold"],
+["Hg","Mercury"],["Tl","Thallium"],["Pb","Lead"],["Bi","Bismuth"],
+["Po","Polonium"],["At","Astatine"],["Rn","Radon"],
+["Fr","Francium"],["Ra","Radium"],["Ac","Actinium"],["Th","Thorium"],
+["Pa","Protactinium"],["U","Uranium"],["Np","Neptunium"],["Pu","Plutonium"],
+["Am","Americium"],["Cm","Curium"],["Bk","Berkelium"],["Cf","Californium"],
+["Es","Einsteinium"],["Fm","Fermium"],["Md","Mendelevium"],
+["No","Nobelium"],["Lr","Lawrencium"],
+["Rf","Rutherfordium"],["Db","Dubnium"],["Sg","Seaborgium"],
+["Bh","Bohrium"],["Hs","Hassium"],["Mt","Meitnerium"],
+["Ds","Darmstadtium"],["Rg","Roentgenium"],["Cn","Copernicium"],
+["Nh","Nihonium"],["Fl","Flerovium"],["Mc","Moscovium"],
+["Lv","Livermorium"],["Ts","Tennessine"],["Og","Oganesson"]
+];
+
+/* ===== SHELL CAPACITY ===== */
+const CAP=[2,8,18,32,32,18,8];
+function shells(Z){
+  let s=[],r=Z;
+  for(let c of CAP){
+    if(r<=0) break;
+    s.push(Math.min(c,r));
+    r-=c;
+  }
+  return s;
+}
+
+/* ===== APP ===== */
+const list=document.getElementById("list");
+const stage=document.getElementById("stage");
+
+ELEMENTS.forEach((e,i)=>{
+  let d=document.createElement("div");
+  d.className="item";
+  d.innerHTML=`<div class="num">${i+1}</div><div class="sym">${e[0]}</div>${e[1]}`;
+  d.onclick=()=>select(i);
+  list.appendChild(d);
+});
+
+function select(i){
+  document.querySelectorAll(".item").forEach(x=>x.classList.remove("active"));
+  list.children[i].classList.add("active");
+
+  const Z=i+1;
+  const sh=shells(Z);
+
+  document.getElementById("nNum").textContent=Z;
+  document.getElementById("nSym").textContent=ELEMENTS[i][0];
+  document.getElementById("name").textContent=ELEMENTS[i][1];
+  document.getElementById("conf").textContent="Electron Shells: "+sh.join(", ");
+
+  stage.querySelectorAll(".orbital").forEach(o=>o.remove());
+
+  sh.forEach((n,idx)=>{
+    const size=150+idx*55;
+    const orb=document.createElement("div");
+    orb.className="orbital";
+    orb.style.width=size+"px";
+    orb.style.height=size+"px";
+    orb.style.animationDuration=(6+idx*2)+"s";
+
+    for(let j=0;j<n;j++){
+      const e=document.createElement("div");
+      e.className="electron";
+      const ang=360/n*j;
+      e.style.transform=`rotate(${ang}deg) translate(${size/2}px)`;
+      orb.appendChild(e);
+    }
+    stage.appendChild(orb);
+  });
+
+  document.documentElement.style.setProperty("--glow",
+    `hsl(${Z*3%360},100%,60%)`);
+}
+
+select(0);
+</script>
+
+</body>
+</html>
